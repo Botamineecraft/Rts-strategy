@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Forged Arena — RTS в духе Supreme Commander</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="game"></canvas>
+<canvas id="overlay"></canvas>
+
+<!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+<div id="topbar">
+  <div class="res mass">
+    <div class="res-head"><span class="ric m">◉</span><span id="massVal">1200</span><span id="massRate" class="rate plus">+0.0/с</span></div>
+    <div class="resbar"><div id="massFill"></div></div>
+  </div>
+  <div class="res energy">
+    <div class="res-head"><span class="ric e">⚡</span><span id="enVal">2000</span><span id="enRate" class="rate plus">+0.0/с</span></div>
+    <div class="resbar"><div id="enFill"></div></div>
+  </div>
+  <div class="spacer"></div>
+  <div id="clock">0:00</div>
+  <div id="unitCount">Юниты 0/60</div>
+  <div id="diffLabel">Норма</div>
+  <button id="muteBtn" title="Звук (M)">🔊</button>
+  <button id="edgeBtn" title="Скроллинг у края экрана">🖥</button>
+  <button id="helpBtn" title="Помощь (F1)">?</button>
+</div>
+
+<div id="toasts"></div>
+<div id="cursorHint"></div>
+
+<!-- НИЖНЯЯ ПАНЕЛЬ -->
+<div id="bottombar">
+  <div id="minimapWrap"><canvas id="minimap" width="192" height="192"></canvas></div>
+  <div id="selPanel"><div class="hint">ЛКМ — выбор · рамка — группа · ПКМ — приказ<br>A — атака-марш · P — патруль · колесо — зум</div></div>
+  <div id="cmdPanel">
+    <div id="buildMenu">
+      <div class="panel-title">СТРОИТЕЛЬСТВО (ACU)</div>
+      <div id="buildButtons" class="btnrow"></div>
+    </div>
+    <div id="prodMenu">
+      <div class="panel-title">ПРОИЗВОДСТВО (ЗАВОД)</div>
+      <div id="prodButtons" class="btnrow"></div>
+      <div id="queueInfo"></div>
+      <button id="clearQueue" class="small-btn">Очистить очередь</button>
+    </div>
+  </div>
+</div>
+
+<!-- СТАРТОВЫЙ ЭКРАН -->
+<div id="startScreen" class="screen">
+  <div class="panel">
+    <h1>FORGED <span>ARENA</span></h1>
+    <p class="sub">Тактическая RTS в браузере — в духе Supreme Commander: Forged Alliance</p>
+    <div class="lore">Эпоха Бесконечной Войны. Ваш Командир (ACU) высажен на вражеский мир.
+    Собирайте <b class="m">массу</b> и <b class="e">энергию</b>, стройте базу, выпускайте танки
+    и уничтожьте вражеского ACU. Гибель вашего ACU означает поражение — его реактор детонирует.</div>
+
+    <div class="panel-title">СЛОЖНОСТЬ</div>
+    <div class="diffRow">
+      <button class="diffBtn" data-diff="easy"><b>Легко</b><span>спокойное развитие</span></button>
+      <button class="diffBtn active" data-diff="normal"><b>Норма</b><span>сбалансированная партия</span></button>
+      <button class="diffBtn" data-diff="hard"><b>Сложно</b><span>ИИ богаче и злее</span></button>
+    </div>
+
+    <div class="panel-title">УПРАВЛЕНИЕ</div>
+    <div class="ctrl-grid">
+      <div><b>ЛКМ</b> — выбор / рамка</div><div><b>ПКМ</b> — движение, атака, точка сбора</div>
+      <div><b>A + ЛКМ</b> — атака-марш</div><div><b>P + ЛКМ</b> — патруль</div>
+      <div><b>Колесо</b> — стратегический зум</div><div><b>Стрелки / СКМ / край</b> — камера</div>
+      <div><b>1–4</b> — строительство и производство</div><div><b>Пробел</b> — к командиру</div>
+      <div><b>Ctrl+A</b> — вся армия</div><div><b>S / Esc</b> — стоп / отмена</div>
+    </div>
+
+    <button id="startBtn">НАЧАТЬ ОПЕРАЦИЮ</button>
+    <p class="tip">Подсказка: стройте экстракторы на зелёных кристаллах массы, генераторы энергии рядом с ними,
+    затем заводы. Ресурсы списываются постепенно — при дефиците стройка замедляется.</p>
+  </div>
+</div>
+
+<!-- ЭКРАН КОНЦА -->
+<div id="endScreen" class="screen" style="display:none">
+  <div class="panel small">
+    <h1 id="endTitle" class="win">ПОБЕДА</h1>
+    <div id="endStats"></div>
+    <button id="restartBtn">ИГРАТЬ СНОВА</button>
+  </div>
+</div>
+
+<!-- ПОМОЩЬ -->
+<div id="helpOverlay" class="screen" style="display:none">
+  <div class="panel small">
+    <h2>УПРАВЛЕНИЕ</h2>
+    <div class="ctrl-grid wide">
+      <div><b>ЛКМ</b> — выбор юнита/здания</div><div><b>ЛКМ рамкой</b> — групповой выбор</div>
+      <div><b>Двойной ЛКМ</b> — все юниты типа</div><div><b>ПКМ</b> — движение / атака / строить</div>
+      <div><b>A + ЛКМ</b> — атака-марш (бой по пути)</div><div><b>P + ЛКМ</b> — патруль</div>
+      <div><b>Shift + приказ</b> — очередь приказов</div><div><b>S</b> — стоп, <b>Esc</b> — отмена</div>
+      <div><b>Колесо мыши</b> — стратегический зум</div><div><b>Стрелки / СКМ / край экрана</b> — камера</div>
+      <div><b>Пробел</b> — центрировать на ACU</div><div><b>Ctrl+A</b> — выбрать всю армию</div>
+      <div><b>1–4</b> — постройки (ACU) / юниты (завод)</div><div><b>M</b> — звук, <b>F1</b> — помощь</div>
+    </div>
+    <div class="panel-title" style="margin-top:14px">ЭКОНОМИКА</div>
+    <div class="lore">◉ <b class="m">Масса</b> — добывается экстракторами на залежах (зелёные кристаллы).
+    ⚡ <b class="e">Энергия</b> — генераторами. Оба ресурса тратятся непрерывно во время стройки и производства:
+    при нехватке все процессы замедляются. Уничтожение ACU вызывает ядерный взрыв.</div>
+    <button id="closeHelp">ЗАКРЫТЬ</button>
+  </div>
+</div>
+
+<div id="loading">ЗАГРУЗКА…</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
